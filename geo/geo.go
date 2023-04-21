@@ -14,18 +14,49 @@
 package geo
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/codingsince1985/geo-golang"
+	"net/http"
+	"net/url"
+	"time"
 )
 
-func GetCoords(geocoder geo.Geocoder, city string) (float64, float64, error) {
-	location, err := geocoder.Geocode(city)
+type Geo struct {
+	Lat        float64           `json:"lat"`
+	Lon        float64           `json:"lon"`
+	Name       string            `json:"name"`
+	State      string            `json:"state"`
+	Country    string            `json:"country"`
+	LocalNames map[string]string `json:"local_names"`
+}
+
+func GetCoords(apiKey string, city string) (float64, float64, error) {
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+	var rq = url.Values{}
+	rq.Add("limit", "1")
+	rq.Add("appid", apiKey)
+	rq.Add("q", city)
+	geoUrl := fmt.Sprintf("http://api.openweathermap.org/geo/1.0/direct?%s", rq.Encode())
+	log.Infof("geo url %s", geoUrl)
+	response, err := client.Get(geoUrl)
 	if err != nil {
 		return 0, 0, err
 	}
+	defer response.Body.Close()
+	var data []Geo
+	if err := json.NewDecoder(response.Body).Decode(&data); err != nil {
+		return 0, 0, err
+	}
+	if len(data) == 0 {
+		return 0, 0, errors.New(fmt.Sprintf("city[%s] not found ", city))
+	}
 
-	log.Infof("Latitude: %f Longitude: %f for %s found", location.Lat, location.Lng, city)
+	var location = data[0]
+	log.Debugf("Latitude: %f Longitude: %f for %s found : Name : %s , Country : %s , State : %s  LocalName : %s", location.Lat, location.Lon, city, location.Name, location.Country, location.State, location.LocalNames)
 
-	return location.Lat, location.Lng, nil
+	return location.Lat, location.Lon, nil
 }

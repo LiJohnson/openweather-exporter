@@ -33,7 +33,7 @@ var (
 	app         = kingpin.New("openweather-exporter", "Openweather Exporter for Openweather API").Author("Billy Wooten")
 	addr        = app.Flag("listen-address", "HTTP port to listen on. (Default 9091)").Envar("OW_LISTEN_ADDRESS").Default(":9091").String()
 	apiKey      = app.Flag("apikey", "Openweather API Key").Envar("OW_APIKEY").Required().String()
-	city        = app.Flag("city", "City for Openweather to gather metrics from.").Envar("OW_CITY").Default("New York, NY").String()
+	city        = app.Flag("city", "City for Openweather to gather metrics from.").Envar("OW_CITY").Default("New York").String()
 	degreesUnit = app.Flag("degrees-unit", "The base unit for temperature output. Fahrenheit or Celsius. (Default: F)").Envar("OW_DEGREES_UNIT").Default("F").String()
 	language    = app.Flag("language", "The language for metric output. (Default: EN)").Envar("OW_LANGUAGE").Default("EN").String()
 	cacheTTL    = app.Flag("cache-ttl", "Cache time-to-live in seconds. (Default: 300)").Envar("OW_CACHE_TTL").Default("300").String()

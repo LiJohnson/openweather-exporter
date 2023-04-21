@@ -21,7 +21,6 @@ import (
 
 	"github.com/jellydator/ttlcache/v2"
 
-	"github.com/codingsince1985/geo-golang/openstreetmap"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/billykwooten/openweather-exporter/geo"
@@ -76,12 +75,13 @@ type Location struct {
 	CacheKeyUVOWM string
 }
 
-func resolveLocations(locations string) []Location {
+func resolveLocations(locations string, apikey string) []Location {
 	var res []Location
 
 	for _, location := range strings.Split(locations, "|") {
 		// Get Coords.
-		latitude, longitude, err := geo.GetCoords(openstreetmap.Geocoder(), location)
+
+		latitude, longitude, err := geo.GetCoords(apikey, location)
 		if err != nil {
 			log.Fatal("failed to resolve location:", err)
 		}
@@ -101,7 +101,7 @@ func NewOpenweatherCollector(degreesUnit string, language string, apikey string,
 		ApiKey:      apikey,
 		DegreesUnit: degreesUnit,
 		Language:    language,
-		Locations:   resolveLocations(locations),
+		Locations:   resolveLocations(locations, apikey),
 		Cache:       cache,
 		enablePol:   enablePol,
 		enableUV:    enableUV,

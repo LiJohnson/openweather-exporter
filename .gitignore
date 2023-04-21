@@ -16,3 +16,5 @@ vendor/
 
 # GoLand specific folders/files
 .idea/
+
+openweather-exporter
