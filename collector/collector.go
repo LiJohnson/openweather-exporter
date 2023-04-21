@@ -64,6 +64,8 @@ type OpenweatherCollector struct {
 	Pm10              *prometheus.Desc
 	Nh3               *prometheus.Desc
 	UVI               *prometheus.Desc
+	latitude          *prometheus.Desc
+	longitude         *prometheus.Desc
 }
 
 type Location struct {
@@ -193,6 +195,14 @@ func NewOpenweatherCollector(degreesUnit string, language string, apikey string,
 			"Ultraviolet Index",
 			[]string{"location"}, nil,
 		),
+		latitude: prometheus.NewDesc("openweather_latitude",
+			"geo latitude",
+			[]string{"location"}, nil,
+		),
+		longitude: prometheus.NewDesc("openweather_longitude",
+			"geo longitude",
+			[]string{"location"}, nil,
+		),
 	}
 }
 
@@ -222,6 +232,8 @@ func (collector *OpenweatherCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- collector.Pm10
 	ch <- collector.Nh3
 	ch <- collector.UVI
+	ch <- collector.latitude
+	ch <- collector.longitude
 
 }
 
@@ -323,7 +335,9 @@ func (collector *OpenweatherCollector) Collect(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(collector.sunset, prometheus.GaugeValue, float64(w.Sys.Sunset), location.Location)
 		ch <- prometheus.MustNewConstMetric(collector.snow1h, prometheus.GaugeValue, w.Snow.OneH, location.Location)
 		ch <- prometheus.MustNewConstMetric(collector.currentconditions, prometheus.GaugeValue, 0, location.Location, weatherDescription)
-		if collector.enablePol == true {
+		ch <- prometheus.MustNewConstMetric(collector.latitude, prometheus.GaugeValue, location.Latitude, location.Location)
+		ch <- prometheus.MustNewConstMetric(collector.longitude, prometheus.GaugeValue, location.Longitude, location.Location)
+		if collector.enablePol == true && len(pd.List) > 0 {
 			ch <- prometheus.MustNewConstMetric(collector.aqi, prometheus.GaugeValue, pd.List[0].Main.Aqi, location.Location)
 			ch <- prometheus.MustNewConstMetric(collector.Co, prometheus.GaugeValue, pd.List[0].Components.Co, location.Location)
 			ch <- prometheus.MustNewConstMetric(collector.No, prometheus.GaugeValue, pd.List[0].Components.No, location.Location)
