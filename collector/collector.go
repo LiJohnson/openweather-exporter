@@ -54,6 +54,7 @@ type OpenweatherCollector struct {
 	sunrise           *prometheus.Desc
 	sunset            *prometheus.Desc
 	currentconditions *prometheus.Desc
+	weathericon       *prometheus.Desc
 	aqi               *prometheus.Desc
 	Co                *prometheus.Desc
 	No                *prometheus.Desc
@@ -155,6 +156,10 @@ func NewOpenweatherCollector(degreesUnit string, language string, apikey string,
 			"Current weather conditions",
 			[]string{"location", "currentconditions"}, nil,
 		),
+		weathericon: prometheus.NewDesc("openweather_weathericon",
+			"Current weather icon :https://openweathermap.org/img/wn/<weathericon>[@2x].png",
+			[]string{"location", "weathericon"}, nil,
+		),
 		aqi: prometheus.NewDesc("openweather_pollution_airqualityindex",
 			"Air Quality Index. 1 = Good, 2 = Fair, 3 = Moderate, 4 = Poor, 5 = Very Poor.",
 			[]string{"location"}, nil,
@@ -222,6 +227,7 @@ func (collector *OpenweatherCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- collector.sunrise
 	ch <- collector.sunset
 	ch <- collector.currentconditions
+	ch <- collector.weathericon
 	ch <- collector.aqi
 	ch <- collector.Co
 	ch <- collector.No
@@ -317,8 +323,10 @@ func (collector *OpenweatherCollector) Collect(ch chan<- prometheus.Metric) {
 
 		// Get Weather description out of Weather slice to pass as label
 		var weatherDescription string
+		var weatherIcon string
 		for _, n := range w.Weather {
 			weatherDescription = n.Description
+			weatherIcon = n.Icon
 		}
 
 		// Write the latest value for each metric in the prometheus metric channel.
@@ -335,6 +343,7 @@ func (collector *OpenweatherCollector) Collect(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(collector.sunset, prometheus.GaugeValue, float64(w.Sys.Sunset), location.Location)
 		ch <- prometheus.MustNewConstMetric(collector.snow1h, prometheus.GaugeValue, w.Snow.OneH, location.Location)
 		ch <- prometheus.MustNewConstMetric(collector.currentconditions, prometheus.GaugeValue, 0, location.Location, weatherDescription)
+		ch <- prometheus.MustNewConstMetric(collector.weathericon, prometheus.GaugeValue, 0, location.Location, weatherIcon)
 		ch <- prometheus.MustNewConstMetric(collector.latitude, prometheus.GaugeValue, location.Latitude, location.Location)
 		ch <- prometheus.MustNewConstMetric(collector.longitude, prometheus.GaugeValue, location.Longitude, location.Location)
 		if collector.enablePol == true && len(pd.List) > 0 {
