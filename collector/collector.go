@@ -83,15 +83,20 @@ func resolveLocations(locations string, apikey string) []Location {
 
 	for _, location := range strings.Split(locations, "|") {
 		// Get Coords.
-
-		latitude, longitude, err := geo.GetCoords(apikey, location)
+		cityArr := strings.Split(location, ":")
+		city := cityArr[0]
+		displayName := city
+		if len(cityArr) == 2 {
+			displayName = cityArr[1]
+		}
+		latitude, longitude, err := geo.GetCoords(apikey, city)
 		if err != nil {
 			log.Fatal("failed to resolve location:", err)
 		}
 		cacheKeyOWM := fmt.Sprintf("OWM %s", location)
 		cacheKeyPOWM := fmt.Sprintf("POWM %s", location)
 		cacheKeyUVOWM := fmt.Sprintf("UVOWM %s", location)
-		res = append(res, Location{Location: location, Latitude: latitude, Longitude: longitude, CacheKeyOWM: cacheKeyOWM, CacheKeyPOWM: cacheKeyPOWM, CacheKeyUVOWM: cacheKeyUVOWM})
+		res = append(res, Location{Location: displayName, Latitude: latitude, Longitude: longitude, CacheKeyOWM: cacheKeyOWM, CacheKeyPOWM: cacheKeyPOWM, CacheKeyUVOWM: cacheKeyUVOWM})
 	}
 	return res
 }
